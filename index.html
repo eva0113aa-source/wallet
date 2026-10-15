@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">Exchange Expense Tracker</h1>
-                    <p class="text-xs text-slate-400">🇪🇺 歐元核心 · 雙向日期時間序排序版 (v15.3)</p>
+                    <p class="text-xs text-slate-400">🇪🇺 歐元核心 · 編輯日期/國家/城市全面精準對應版 (v15.2)</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -169,7 +169,7 @@
                 </div>
 
                 <!-- Explicit Filter Bar with '開始篩選' button -->
-                <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 pt-2 items-end">
+                <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 pt-2 items-end">
                     <div>
                         <label class="block text-[11px] font-medium text-slate-500 mb-1">開始日期 (From)</label>
                         <input type="date" id="filterStartDate" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-purple-500 focus:border-purple-500">
@@ -196,11 +196,6 @@
                     <div>
                         <button onclick="resetFilters()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium rounded-xl transition">重設</button>
                     </div>
-                    <div>
-                        <button onclick="toggleDateSort()" id="btnSortToggle" class="w-full py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-medium rounded-xl transition flex items-center justify-center space-x-1">
-                            <i class="fa-solid fa-sort mr-1"></i><span id="filterBtnSortText">日期：舊到新</span>
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -209,12 +204,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-purple-50/50 text-slate-500 text-xs uppercase tracking-wider border-b border-purple-100">
-                            <th class="py-3 px-4 font-semibold cursor-pointer select-none hover:text-purple-600 transition flex items-center space-x-1" onclick="toggleDateSort()" title="點擊切換日期升冪/降冪排序">
-                                <span>日期</span>
-                                <span id="dateSortBadge" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-purple-100 text-purple-700 font-bold">
-                                    <i id="dateSortIcon" class="fa-solid fa-arrow-down-short-wide mr-0.5"></i><span id="dateSortText">舊→新</span>
-                                </span>
-                            </th>
+                            <th class="py-3 px-4 font-semibold">日期</th>
                             <th class="py-3 px-4 font-semibold">帳本類型</th>
                             <th class="py-3 px-4 font-semibold">國家 (Country)</th>
                             <th class="py-3 px-4 font-semibold">城市 (City)</th>
@@ -396,30 +386,6 @@
         let defaultRatesToEUR = { 'TWD': 0.029, 'CZK': 0.040, 'USD': 0.930, 'JPY': 0.0061 };
 
         let categories = [];
-
-        let dateSortOrder = 'asc'; // 'asc': 舊到新, 'desc': 新到舊
-
-        function toggleDateSort() {
-            dateSortOrder = (dateSortOrder === 'asc') ? 'desc' : 'asc';
-            updateDateSortUI();
-            filterExpenses();
-        }
-
-        function updateDateSortUI() {
-            const icon = document.getElementById('dateSortIcon');
-            const text = document.getElementById('dateSortText');
-            const filterBtnText = document.getElementById('filterBtnSortText');
-            if (dateSortOrder === 'asc') {
-                if (icon) icon.className = 'fa-solid fa-arrow-down-short-wide mr-0.5';
-                if (text) text.innerText = '舊→新';
-                if (filterBtnText) filterBtnText.innerText = '日期：舊到新';
-            } else {
-                if (icon) icon.className = 'fa-solid fa-arrow-up-wide-short mr-0.5';
-                if (text) text.innerText = '新→舊';
-                if (filterBtnText) filterBtnText.innerText = '日期：新到舊';
-            }
-        }
-
 
         // 國家中英文標準化對照函式
         
@@ -1693,12 +1659,6 @@
                 return matchLedger && matchCountry && matchDateRange && matchQuery;
             });
 
-                        // 依照使用者選擇的時間序排序
-            filtered.sort((a, b) => {
-                const dateA = new Date((a.date || '').replace(/\//g, '-')).getTime() || 0;
-                const dateB = new Date((b.date || '').replace(/\//g, '-')).getTime() || 0;
-                return dateSortOrder === 'asc' ? (dateA - dateB) : (dateB - dateA);
-            });
             renderTable(filtered);
             updateSummaryCards(filtered);
             updateCharts(filtered);
