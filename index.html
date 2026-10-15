@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">Exchange Expense Tracker</h1>
-                    <p class="text-xs text-slate-400">🇪🇺 歐元核心 · 編輯日期/國家/城市全面精準對應版 (v15.2)</p>
+                    <p class="text-xs text-slate-400">🇪🇺 歐元核心 · 最新真實資料同步基準版 (v15.4)</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -374,14 +374,59 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        let defaultCategories = ['餐飲美食', '交通通勤', '住宿飯店', '觀光娛樂', '購物消費', '生活雜費'];
+        let defaultCategories = [
+        "餐飲美食",
+        "交通通勤",
+        "住宿飯店",
+        "觀光娛樂",
+        "購物消費",
+        "生活雜費",
+        "必要支出",
+        "超市",
+        "日用品",
+        "休閒娛樂",
+        "日常外食",
+        "旅遊"
+];
         
         let defaultCountries = {
-            '德國': { name: '德國', flag: '🇩🇪', cities: ['德勒斯登 (Dresden)', '柏林 (Berlin)', '慕尼黑 (Munich)', '萊比錫 (Leipzig)', '科隆 (Cologne)', '法蘭克福 (Frankfurt)'] },
-            '捷克': { name: '捷克', flag: '🇨🇿', cities: ['布拉格 (Prague)', '庫倫洛夫 (Český Krumlov)'] },
-            '斯洛伐克': { name: '斯洛伐克', flag: '🇸🇰', cities: ['布拉蒂斯拉發 (Bratislava)', '科希策 (Košice)'] },
-            '奧地利': { name: '奧地利', flag: '🇦🇹', cities: ['維也納 (Vienna)', '薩爾斯堡 (Salzburg)'] }
-        };
+            "德國": {
+                        "name": "德國",
+                        "flag": "🇩🇪",
+                        "cities": [
+                                    "德勒斯登 (Dresden)",
+                                    "柏林 (Berlin)",
+                                    "慕尼黑 (Munich)",
+                                    "萊比錫 (Leipzig)",
+                                    "科隆 (Cologne)",
+                                    "法蘭克福 (Frankfurt)"
+                        ]
+            },
+            "捷克": {
+                        "name": "捷克",
+                        "flag": "🇨🇿",
+                        "cities": [
+                                    "布拉格 (Prague)",
+                                    "庫倫洛夫 (Český Krumlov)"
+                        ]
+            },
+            "斯洛伐克": {
+                        "name": "斯洛伐克",
+                        "flag": "🇸🇰",
+                        "cities": [
+                                    "布拉蒂斯拉發 (Bratislava)",
+                                    "科希策 (Košice)"
+                        ]
+            },
+            "奧地利": {
+                        "name": "奧地利",
+                        "flag": "🇦🇹",
+                        "cities": [
+                                    "維也納 (Vienna)",
+                                    "薩爾斯堡 (Salzburg)"
+                        ]
+            }
+};
 
         let defaultRatesToEUR = { 'TWD': 0.029, 'CZK': 0.040, 'USD': 0.930, 'JPY': 0.0061 };
 
@@ -441,6 +486,17 @@
 
         const sampleExpenses = [
             {
+                        "id": "1791931931329",
+                        "date": "2026-10-14",
+                        "ledger": "daily",
+                        "title": "fraenk 9月網路費",
+                        "category": "必要支出",
+                        "subCategory": "娛樂",
+                        "amount": 4.67,
+                        "country": "德國",
+                        "city": "德勒斯登 (Dresden)"
+            },
+            {
                         "id": "17919249324360.709110321060432",
                         "date": "2026/9/16",
                         "ledger": "daily",
@@ -448,8 +504,7 @@
                         "category": "必要支出",
                         "amount": 42,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.7848331817544226",
@@ -459,8 +514,7 @@
                         "category": "超市",
                         "amount": 7.48,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.556573661604167",
@@ -470,8 +524,7 @@
                         "category": "必要支出",
                         "amount": 126.54,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "住"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.7511366177385367",
@@ -481,8 +534,7 @@
                         "category": "日用品",
                         "amount": 20.25,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.4220465390766982",
@@ -492,8 +544,7 @@
                         "category": "超市",
                         "amount": 11.12,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.18656590580809707",
@@ -503,8 +554,7 @@
                         "category": "休閒娛樂",
                         "amount": 6.1,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.7924166036641328",
@@ -514,8 +564,7 @@
                         "category": "超市",
                         "amount": 7,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.3558669293641734",
@@ -525,8 +574,7 @@
                         "category": "日用品",
                         "amount": 4.99,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.3250102557161728",
@@ -536,8 +584,7 @@
                         "category": "日用品",
                         "amount": 8.9,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.17487919115860961",
@@ -547,8 +594,7 @@
                         "category": "超市",
                         "amount": 7.87,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.12120402155313859",
@@ -558,8 +604,7 @@
                         "category": "超市",
                         "amount": 4.8,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.9643217306408806",
@@ -569,8 +614,7 @@
                         "category": "日用品",
                         "amount": 9,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.8739477394881289",
@@ -580,8 +624,7 @@
                         "category": "超市",
                         "amount": 12.34,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.9253668686834389",
@@ -591,8 +634,7 @@
                         "category": "超市",
                         "amount": 5.5,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.9644754279509915",
@@ -602,8 +644,7 @@
                         "category": "休閒娛樂",
                         "amount": 4.7,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.2065036321301561",
@@ -613,8 +654,7 @@
                         "category": "休閒娛樂",
                         "amount": 3.2,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.45426180916432635",
@@ -624,8 +664,7 @@
                         "category": "日用品",
                         "amount": 19.99,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.2604638156618132",
@@ -635,8 +674,7 @@
                         "category": "超市",
                         "amount": 2.62,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.06899979600810635",
@@ -646,8 +684,7 @@
                         "category": "日常外食",
                         "amount": 4.15,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.836012384528531",
@@ -657,8 +694,7 @@
                         "category": "日用品",
                         "amount": 3.25,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.11987761320411405",
@@ -668,8 +704,7 @@
                         "category": "超市",
                         "amount": 6.03,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.367150883086769",
@@ -679,8 +714,7 @@
                         "category": "日常外食",
                         "amount": 4.89,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.45781153928667817",
@@ -690,8 +724,7 @@
                         "category": "超市",
                         "amount": 7.12,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.2848943363445702",
@@ -701,8 +734,7 @@
                         "category": "日常外食",
                         "amount": 5,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.6063171589441736",
@@ -712,8 +744,7 @@
                         "category": "超市",
                         "amount": 1.9,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.35543367414887994",
@@ -723,8 +754,7 @@
                         "category": "超市",
                         "amount": 1.24,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.7240564724914489",
@@ -734,8 +764,7 @@
                         "category": "休閒娛樂",
                         "amount": 5.7,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.04121888888275116",
@@ -745,8 +774,7 @@
                         "category": "日常外食",
                         "amount": 3.9,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.27481198301898735",
@@ -756,8 +784,7 @@
                         "category": "超市",
                         "amount": 3.58,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.1481212375126657",
@@ -767,8 +794,7 @@
                         "category": "日常外食",
                         "amount": 5.3,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.8726249135454051",
@@ -778,8 +804,7 @@
                         "category": "超市",
                         "amount": 3.28,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.7303163927116203",
@@ -789,8 +814,7 @@
                         "category": "休閒娛樂",
                         "amount": 2.5,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.0580486569724894",
@@ -800,8 +824,7 @@
                         "category": "日用品",
                         "amount": 10,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.2604507400217547",
@@ -811,8 +834,7 @@
                         "category": "日常外食",
                         "amount": 5.7,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.25933380499773384",
@@ -822,8 +844,7 @@
                         "category": "休閒娛樂",
                         "amount": 6.6,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.8535927043348671",
@@ -833,8 +854,7 @@
                         "category": "休閒娛樂",
                         "amount": 5.6,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.23224788887561687",
@@ -844,8 +864,7 @@
                         "category": "超市",
                         "amount": 5.73,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.7158853155154992",
@@ -855,8 +874,7 @@
                         "category": "日常外食",
                         "amount": 7.9,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.9822248108965721",
@@ -866,30 +884,29 @@
                         "category": "休閒娛樂",
                         "amount": 1,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.9892485752907705",
-                        "date": "2026/10/3",
+                        "date": "2026-10-03",
                         "ledger": "travel",
                         "title": "午餐+下午茶+晚餐",
                         "category": "旅遊",
+                        "subCategory": "食",
                         "amount": 24.9,
-                        "country": "Germany",
-                        "city": "Leipzig",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "萊比錫 (Leipzig)"
             },
             {
                         "id": "17919249324360.10055711276218582",
-                        "date": "2026/10/3",
+                        "date": "2026-10-03",
                         "ledger": "travel",
                         "title": "戰爭博物館門票",
                         "category": "旅遊",
+                        "subCategory": "娛樂",
                         "amount": 10,
-                        "country": "Germany",
-                        "city": "Leipzig",
-                        "subCategory": "娛樂"
+                        "country": "德國",
+                        "city": "萊比錫 (Leipzig)"
             },
             {
                         "id": "17919249324360.6006466045922545",
@@ -899,8 +916,7 @@
                         "category": "日常外食",
                         "amount": 7.5,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.6764676083651542",
@@ -910,8 +926,7 @@
                         "category": "超市",
                         "amount": 1.78,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.06250202402450622",
@@ -921,8 +936,7 @@
                         "category": "休閒娛樂",
                         "amount": 5.7,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.5447571174759529",
@@ -932,8 +946,7 @@
                         "category": "休閒娛樂",
                         "amount": 2.2,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "娛樂"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.44547034511280037",
@@ -943,8 +956,7 @@
                         "category": "超市",
                         "amount": 6.61,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.877846692273044",
@@ -954,8 +966,7 @@
                         "category": "日用品",
                         "amount": 2.4,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.08191827614304925",
@@ -965,8 +976,7 @@
                         "category": "日常外食",
                         "amount": 7.95,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.9818340036239493",
@@ -976,8 +986,7 @@
                         "category": "日用品",
                         "amount": 0.5,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.6010472690216067",
@@ -987,8 +996,7 @@
                         "category": "超市",
                         "amount": 9.95,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.04263096057985072",
@@ -998,8 +1006,7 @@
                         "category": "日用品",
                         "amount": 1,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324360.840845650782808",
@@ -1009,8 +1016,7 @@
                         "category": "日用品",
                         "amount": 12,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.09017965231622638",
@@ -1020,8 +1026,7 @@
                         "category": "日常外食",
                         "amount": 21.2,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.6732161618670157",
@@ -1031,118 +1036,117 @@
                         "category": "必要支出",
                         "amount": 242.87,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "住"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.33481921596100295",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "flixbus來回",
                         "category": "旅遊",
+                        "subCategory": "行",
                         "amount": 71.05,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "行"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.11933012102240981",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "國王湖一日遊",
                         "category": "旅遊",
+                        "subCategory": "娛樂",
                         "amount": 104,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.8814373112965338",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "Booking",
                         "category": "旅遊",
+                        "subCategory": "住",
                         "amount": 43.34,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "住"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.901084480214361",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "國王湖磁鐵",
                         "category": "旅遊",
+                        "subCategory": "娛樂",
                         "amount": 7,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "娛樂"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.6729201790780758",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "國王湖船票加價",
                         "category": "旅遊",
+                        "subCategory": "娛樂",
                         "amount": 7,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.25917362594156845",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "小費",
                         "category": "旅遊",
+                        "subCategory": "娛樂",
                         "amount": 4.5,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.9963318835225222",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "國王湖餐廳",
                         "category": "旅遊",
+                        "subCategory": "食",
                         "amount": 9.8,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.7832418948967708",
-                        "date": "2026/10/9",
+                        "date": "2026-10-09",
                         "ledger": "travel",
                         "title": "麵刺郎",
                         "category": "旅遊",
+                        "subCategory": "食",
                         "amount": 16.9,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.674245490412083",
-                        "date": "2026/10/10",
+                        "date": "2026-10-10",
                         "ledger": "travel",
                         "title": "Venchi",
                         "category": "旅遊",
+                        "subCategory": "食",
                         "amount": 7.3,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "食"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.6145112839489925",
-                        "date": "2026/10/10",
+                        "date": "2026-10-10",
                         "ledger": "travel",
                         "title": "慕尼黑磁鐵+明信片",
                         "category": "旅遊",
+                        "subCategory": "娛樂",
                         "amount": 6.5,
-                        "country": "Germany",
-                        "city": "Munich",
-                        "subCategory": "娛樂"
+                        "country": "德國",
+                        "city": "慕尼黑 (Munich)"
             },
             {
                         "id": "17919249324370.056390926159257226",
@@ -1152,8 +1156,7 @@
                         "category": "超市",
                         "amount": 1.04,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.2146677687624089",
@@ -1163,8 +1166,7 @@
                         "category": "超市",
                         "amount": 3.32,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.782607402015383",
@@ -1174,8 +1176,7 @@
                         "category": "日用品",
                         "amount": 2.4,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.2374378400534395",
@@ -1185,8 +1186,7 @@
                         "category": "日常外食",
                         "amount": 0.79,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.26291684566067774",
@@ -1196,8 +1196,7 @@
                         "category": "超市",
                         "amount": 9.4,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.029234105975379454",
@@ -1207,8 +1206,7 @@
                         "category": "日常外食",
                         "amount": 9.9,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.34521666185331223",
@@ -1218,8 +1216,7 @@
                         "category": "日用品",
                         "amount": 1.99,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "衣"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.8958772221467489",
@@ -1229,8 +1226,7 @@
                         "category": "日常外食",
                         "amount": 5.7,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.2943938875372145",
@@ -1240,74 +1236,73 @@
                         "category": "超市",
                         "amount": 2.83,
                         "country": "Germany",
-                        "city": "Dresden",
-                        "subCategory": "食"
+                        "city": "Dresden"
             },
             {
                         "id": "17919249324370.9715005548384184",
-                        "date": "2026/10/15",
+                        "date": "2026-10-15",
                         "ledger": "travel",
-                        "title": "Prague",
+                        "title": "Flixbus to Prague",
                         "category": "旅遊",
+                        "subCategory": "行",
                         "amount": 12.23,
-                        "country": "Czech",
-                        "city": "Prague",
-                        "subCategory": "食"
+                        "country": "捷克",
+                        "city": "布拉格 (Prague)"
             },
             {
                         "id": "17919249324370.748659944007669",
-                        "date": "2026/10/15",
+                        "date": "2026-10-15",
                         "ledger": "travel",
-                        "title": "nights",
+                        "title": "布拉格住宿 2 nights",
                         "category": "旅遊",
+                        "subCategory": "住",
                         "amount": 53.07,
-                        "country": "Czech",
-                        "city": "Prague",
-                        "subCategory": "住"
+                        "country": "捷克",
+                        "city": "布拉格 (Prague)"
             },
             {
                         "id": "17919249324370.45108695614330285",
-                        "date": "2026/10/17",
+                        "date": "2026-10-17",
                         "ledger": "travel",
-                        "title": "krumlov",
+                        "title": "rejiojet to krumlov",
                         "category": "旅遊",
+                        "subCategory": "行",
                         "amount": 5.73,
-                        "country": "Czech",
-                        "city": "Prague",
-                        "subCategory": "食"
+                        "country": "捷克",
+                        "city": "布拉格 (Prague)"
             },
             {
                         "id": "17919249324370.5045405524282638",
-                        "date": "2026/10/17",
+                        "date": "2026-10-17",
                         "ledger": "travel",
-                        "title": "Vienna",
+                        "title": "Flixbus to Vienna",
                         "category": "旅遊",
+                        "subCategory": "行",
                         "amount": 14.93,
-                        "country": "Austria",
-                        "city": "Vienna",
-                        "subCategory": "食"
+                        "country": "奧地利",
+                        "city": "維也納 (Vienna)"
             },
             {
                         "id": "17919249324370.3877299179032172",
-                        "date": "2026/10/17",
+                        "date": "2026-10-17",
                         "ledger": "travel",
-                        "title": "nights",
+                        "title": "維也納住宿 2 nights",
                         "category": "旅遊",
+                        "subCategory": "住",
                         "amount": 31.52,
-                        "country": "Austria",
-                        "city": "Vienna",
-                        "subCategory": "住"
+                        "country": "奧地利",
+                        "city": "維也納 (Vienna)"
             },
             {
                         "id": "17919249324370.9382427061473441",
-                        "date": "2026/10/19",
+                        "date": "2026-10-19",
                         "ledger": "travel",
-                        "title": "Dresden",
+                        "title": "Flixbus to Dresden",
                         "category": "旅遊",
+                        "subCategory": "行",
                         "amount": 37.51,
-                        "country": "Slovakia",
-                        "city": "Bratislava",
-                        "subCategory": "食"
+                        "country": "斯洛伐克",
+                        "city": "布拉蒂斯拉發 (Bratislava)"
             }
 ];
 
