@@ -1,1907 +1,423 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exchange Expense Tracker | EU & Exchange Edition (v14)</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN for visual analytics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#fdf4ff',
-                            100: '#fae8ff',
-                            500: '#d946ef',
-                            600: '#c026d3',
-                            700: '#a21caf',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>雲端記帳工具 v15.3</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px 12px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+    h1 { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+    .badge { font-size: 0.75rem; background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 999px; }
+    .sync-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; display: inline-block; }
+    .status-dot.online { background: var(--success); }
+    .status-dot.syncing { background: #eab308; }
+    .status-text { font-size: 0.85rem; color: var(--text-muted); }
+    
+    .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 18px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.85rem; font-weight: 600; color: #334155; }
+    input, select { padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; outline: none; transition: border-color 0.15s; width: 100%; }
+    input:focus, select:focus { border-color: var(--primary); }
+    
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 9px 16px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: 0.15s; gap: 6px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+    
+    .toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    
+    .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-weight: 600; color: #475569; user-select: none; cursor: pointer; }
+    th:hover { background: #f1f5f9; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .amount { font-family: "Courier New", Courier, monospace; font-weight: 700; }
+    .amount-out { color: var(--danger); }
+    .amount-in { color: var(--success); }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: #f1f5f9; color: #475569; }
+    
+    .stats-card { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; flex: 1; min-width: 140px; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-val { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 min-h-screen text-slate-800 font-sans pb-12">
-
-    <!-- Header / Navbar -->
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-purple-100 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
-                    <i class="fa-solid fa-wallet text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">Exchange Expense Tracker</h1>
-                    <p class="text-xs text-slate-400">🇪🇺 歐元核心 · 最新真實資料同步基準版 (v15.4)</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="openModal('settingsModal')" class="px-3 py-1.5 text-xs font-medium text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition border border-pink-200">
-                    <i class="fa-solid fa-gear mr-1"></i> 系統後臺
-                </button>
-                <button onclick="openModal('exportModal')" class="px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition border border-purple-200">
-                    <i class="fa-solid fa-file-export mr-1"></i> 備份
-                </button>
-                <button onclick="openModal('importModal')" class="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg shadow-sm transition">
-                    <i class="fa-solid fa-file-import mr-1"></i> 匯入
-                </button>
-            </div>
-        </div>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>雲端記帳工具 <span class="badge">v15.3 基準版</span></h1>
+      </div>
+      <div class="sync-bar">
+        <span class="status-dot" id="syncDot"></span>
+        <span class="status-text" id="syncStatus">本地模式</span>
+        <button class="btn btn-outline btn-sm" onclick="syncWithCloud()">立即同步</button>
+        <button class="btn btn-outline btn-sm" onclick="uploadAllToCloud()">一鍵全量上傳</button>
+        <button class="btn btn-outline btn-sm" onclick="openConfigModal()">設定 API</button>
+      </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
-
-        <!-- Top Overview & Dashboard Cards -->
-        <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Total Card (EUR Primary) -->
-            <div class="bg-white/90 backdrop-blur rounded-2xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                    <span>總支出 (EUR 歐元)</span>
-                    <i class="fa-solid fa-euro-sign text-purple-500"></i>
-                </div>
-                <div class="mt-4">
-                    <h2 id="totalExpenseDisplay" class="text-3xl font-extrabold text-slate-900">€ 0.00</h2>
-                    <p class="text-xs text-slate-400 mt-1">德國交換生活記帳本</p>
-                </div>
-            </div>
-
-            <!-- Ledger Filter Selector Card -->
-            <div class="bg-white/90 backdrop-blur rounded-2xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                    <span>當前帳本模式</span>
-                    <i class="fa-solid fa-book-bookmark text-pink-500"></i>
-                </div>
-                <div class="mt-3">
-                    <select id="ledgerFilter" onchange="filterExpenses()" class="w-full bg-purple-50 border border-purple-200 text-purple-900 text-sm rounded-xl focus:ring-purple-500 focus:border-purple-500 p-2.5 font-medium">
-                        <option value="all">全部帳本 (日常 + 所有旅遊)</option>
-                        <option value="daily">日常開銷 (Daily - 德勒斯登)</option>
-                        <option value="travel">旅遊專用 (Travel - 多國城市)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Quick Add Button Card -->
-            <div class="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-5 text-white shadow-md shadow-purple-500/20 flex flex-col justify-between cursor-pointer hover:opacity-95 transition" onclick="openAddModal()">
-                <div class="flex items-center justify-between text-purple-100 text-sm font-medium">
-                    <span>快速記帳</span>
-                    <i class="fa-solid fa-circle-plus text-xl text-white"></i>
-                </div>
-                <div class="mt-4 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-bold">新增一筆支出</h3>
-                        <p class="text-xs text-purple-200">支援城市與中文國家名稱</p>
-                    </div>
-                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                        <i class="fa-solid fa-arrow-right text-white"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Status Card -->
-            <div class="bg-white/90 backdrop-blur rounded-2xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                    <span>紀錄筆數統計</span>
-                    <i class="fa-solid fa-chart-pie text-indigo-500"></i>
-                </div>
-                <div class="mt-4 flex items-baseline justify-between">
-                    <div>
-                        <span id="recordCount" class="text-2xl font-bold text-slate-900">0</span>
-                        <span class="text-xs text-slate-400 ml-1">筆記錄</span>
-                    </div>
-                    <button onclick="resetDataPrompt()" class="text-xs text-red-500 hover:text-red-700 underline font-medium">清空重設</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Analytics Dashboard Charts & Travel Breakdown Section -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Category Chart -->
-            <div class="bg-white/90 backdrop-blur rounded-2xl p-6 border border-purple-100 shadow-sm lg:col-span-2 flex flex-col">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-slate-800 text-base flex items-center">
-                        <i class="fa-solid fa-chart-column text-purple-600 mr-2"></i> 分類支出統計 (EUR)
-                    </h3>
-                    <span class="text-xs text-slate-400">依據目前篩選結果</span>
-                </div>
-                <div class="relative flex-grow flex items-center justify-center" style="min-height: 260px;">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Travel Hierarchical Breakdown -->
-            <div class="bg-white/90 backdrop-blur rounded-2xl p-6 border border-purple-100 shadow-sm flex flex-col justify-between">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center">
-                        <i class="fa-solid fa-map-location-dot text-pink-600 mr-2"></i> 旅遊足跡與國家摘要
-                    </h3>
-                    <div id="travelSummaryList" class="space-y-3 max-h-56 overflow-y-auto pr-1"></div>
-                </div>
-                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                    <span>城市與國家管理</span>
-                    <button onclick="openModal('settingsModal')" class="text-purple-600 hover:underline font-medium">至後臺設定</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Expense Records Table Section with Explicit Filter Button -->
-        <section class="bg-white/90 backdrop-blur rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-            <div class="p-5 border-b border-purple-100 space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-lg flex items-center">
-                            <i class="fa-solid fa-list-ul text-purple-600 mr-2"></i> 支出明細列表
-                        </h3>
-                        <p class="text-xs text-slate-400 mt-0.5">檢視、進階篩選與管理所有消費紀錄</p>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <button onclick="openAddModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-xl shadow-sm transition whitespace-nowrap">
-                            <i class="fa-solid fa-plus mr-1"></i> 新增
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Explicit Filter Bar with '開始篩選' button -->
-                <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 pt-2 items-end">
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-500 mb-1">開始日期 (From)</label>
-                        <input type="date" id="filterStartDate" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-purple-500 focus:border-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-500 mb-1">結束日期 (To)</label>
-                        <input type="date" id="filterEndDate" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-purple-500 focus:border-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-500 mb-1">國家篩選</label>
-                        <select id="filterCountry" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-purple-500 focus:border-purple-500">
-                            <option value="all">全部國家</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-500 mb-1">關鍵字 (Item / Category)</label>
-                        <input type="text" id="searchInput" placeholder="搜尋 Item 或 Category..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-purple-500 focus:border-purple-500">
-                    </div>
-                    <div>
-                        <button onclick="filterExpenses()" class="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white text-xs font-medium rounded-xl shadow-sm transition">
-                            <i class="fa-solid fa-filter mr-1"></i> 開始篩選
-                        </button>
-                    </div>
-                    <div>
-                        <button onclick="resetFilters()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium rounded-xl transition">重設</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-purple-50/50 text-slate-500 text-xs uppercase tracking-wider border-b border-purple-100">
-                            <th class="py-3 px-4 font-semibold">日期</th>
-                            <th class="py-3 px-4 font-semibold">帳本類型</th>
-                            <th class="py-3 px-4 font-semibold">國家 (Country)</th>
-                            <th class="py-3 px-4 font-semibold">城市 (City)</th>
-                            <th class="py-3 px-4 font-semibold">Item</th>
-                            <th class="py-3 px-4 font-semibold">category</th>
-                            <th class="py-3 px-4 font-semibold">細專案</th>
-                            <th class="py-3 px-4 font-semibold text-right">金額 (EUR)</th>
-                            <th class="py-3 px-4 font-semibold text-center">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="expenseTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
-                    <tfoot>
-                        <tr class="bg-purple-50/80 font-bold text-slate-900 border-t-2 border-purple-200 text-sm">
-                            <td colspan="6" class="py-3.5 px-4 text-right">總計加總 (Filtered Total):</td>
-                            <td id="tableSumDisplay" class="py-3.5 px-4 text-right text-purple-700">€ 0.00</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            <!-- Empty State -->
-            <div id="emptyState" class="hidden py-16 text-center">
-                <div class="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto text-purple-400 mb-3 text-xl">
-                    <i class="fa-solid fa-receipt"></i>
-                </div>
-                <p class="text-slate-600 font-medium text-sm">目前沒有符合條件的支出紀錄</p>
-                <p class="text-slate-400 text-xs mt-1">請點擊上方「重設」或新增資料開始記帳！</p>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Modal: Settings -->
-    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl mx-4 overflow-hidden border border-purple-100 flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
-                <h3 class="font-bold text-base flex items-center">
-                    <i class="fa-solid fa-gear mr-2"></i> 系統後臺：類別、中文國家與城市設定
-                </h3>
-                <button onclick="closeModal('settingsModal')" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-8 flex-grow">
-                <div>
-                    <h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center"><i class="fa-solid fa-tags text-purple-600 mr-2"></i> 支出分類管理 (category)</h4>
-                    <div class="flex space-x-2 mb-3">
-                        <input type="text" id="newCategoryInput" placeholder="輸入新類別名稱" class="flex-grow bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                        <button onclick="addCategory()" class="px-4 py-2.5 bg-purple-600 text-white text-xs font-medium rounded-xl">新增類別</button>
-                    </div>
-                    <div id="categoryTagsContainer" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100"></div>
-                </div>
-                <hr class="border-slate-100">
-                <div>
-                    <h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center"><i class="fa-solid fa-globe text-pink-600 mr-2"></i> 中文國家與城市管理</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-                        <input type="text" id="newCountryName" placeholder="國家名稱 (例: 法國)" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                        <input type="text" id="newCountryFlag" placeholder="國旗 Emoji (例: 🇫🇷)" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                        <button onclick="addCountry()" class="px-4 py-2.5 bg-pink-600 text-white text-xs font-medium rounded-xl">新增國家</button>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-                        <select id="cityCountrySelect" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"></select>
-                        <input type="text" id="newCityName" placeholder="城市名稱 (例: 巴黎)" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                        <button onclick="addCity()" class="px-4 py-2.5 bg-purple-600 text-white text-xs font-medium rounded-xl">新增城市</button>
-                    </div>
-                    <div id="countryCityListContainer" class="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-100"></div>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end flex-shrink-0">
-                <button onclick="closeModal('settingsModal')" class="px-5 py-2 bg-slate-800 text-white text-xs font-medium rounded-xl">完成並關閉</button>
-            </div>
-        </div>
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-label">本期總支出 (EUR)</div>
+        <div class="stat-val amount-out" id="totalExpenseEur">€0.00</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">本期總支出 (TWD)</div>
+        <div class="stat-val amount-out" id="totalExpenseTwd">NT$0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">記錄總筆數</div>
+        <div class="stat-val" id="recordCount">0</div>
+      </div>
     </div>
 
-    <!-- Modal: Add / Edit Expense -->
-    <div id="addModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden border border-purple-100">
-            <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-between">
-                <h3 id="modalTitle" class="font-bold text-base flex items-center"><i class="fa-solid fa-pen-to-square mr-2"></i> 新增支出紀錄 (EUR)</h3>
-                <button onclick="closeModal('addModal')" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <input type="hidden" id="expenseId">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">日期</label>
-                        <input type="date" id="expenseDate" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">帳本類型</label>
-                        <select id="ledgerType" onchange="toggleLedgerFields()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                            <option value="daily">日常開銷 (Daily - 德勒斯登)</option>
-                            <option value="travel">旅遊專用 (Travel - 多國城市)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">金額 (€ 歐元)</label>
-                        <input type="number" step="0.01" id="expenseAmount" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">消費分類 (category)</label>
-                        <select id="expenseCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">消費細專案 (食/衣/住/行/娛樂)</label>
-                        <select id="expenseSubCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                            <option value="食">食 (飲食餐飲)</option>
-                            <option value="衣">衣 (服飾穿搭)</option>
-                            <option value="住">住 (住宿房租)</option>
-                            <option value="行">行 (交通通勤)</option>
-                            <option value="娛樂">娛樂 (觀光門票/休閒)</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="travelLocationContainer" class="grid grid-cols-2 gap-4 hidden">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">國家 (country)</label>
-                        <select id="expenseCountry" onchange="updateCityDropdown()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">城市 (city)</label>
-                        <select id="expenseCity" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs"></select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">品項名稱 / 備註說明 (Item)</label>
-                    <input type="text" id="expenseTitle" placeholder="例如: 超市食材採購..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
-                </div>
-                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-medium rounded-xl">取消</button>
-                    <button type="button" onclick="saveExpense()" class="px-5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-xl">儲存紀錄</button>
-                </div>
-            </div>
+    <!-- 記帳輸入卡片 -->
+    <div class="card">
+      <form id="recordForm" onsubmit="handleFormSubmit(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="recordDate">日期</label>
+            <input type="date" id="recordDate" required>
+          </div>
+          <div class="form-group">
+            <label for="recordCategory">分類</label>
+            <select id="recordCategory" required>
+              <option value="飲食">飲食</option>
+              <option value="交通">交通</option>
+              <option value="購物">購物</option>
+              <option value="住宿">住宿</option>
+              <option value="娛樂">娛樂</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="recordAmount">金額</label>
+            <input type="number" step="0.01" id="recordAmount" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label for="recordCurrency">幣別</label>
+            <select id="recordCurrency">
+              <option value="EUR">EUR (€)</option>
+              <option value="TWD">TWD (NT$)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="recordDesc">說明 / 備註</label>
+            <input type="text" id="recordDesc" placeholder="例：Rewe 超市採買、德鐵車票">
+          </div>
         </div>
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">新增這筆記錄</button>
+        </div>
+      </form>
     </div>
 
-    <!-- Modal: Export -->
-    <div id="exportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 border border-purple-100 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-file-export mr-2 text-purple-600"></i> 資料備份與匯出</h3>
-                <button onclick="closeModal('exportModal')" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="space-y-2 pt-2">
-                <button onclick="exportJSON()" class="w-full py-2.5 px-4 bg-purple-50 text-purple-700 font-medium rounded-xl text-xs border border-purple-200">下載完整 JSON 備份檔</button>
-                <button onclick="exportCSV()" class="w-full py-2.5 px-4 bg-slate-50 text-slate-700 font-medium rounded-xl text-xs border border-slate-200">匯出 CSV 試算表格式</button>
-            </div>
+    <!-- 列表卡片 -->
+    <div class="card">
+      <div class="toolbar">
+        <div class="filter-group">
+          <label style="font-size: 0.85rem;">篩選分類：</label>
+          <select id="filterCategory" onchange="renderTable()" style="width: auto; padding: 4px 8px;">
+            <option value="ALL">全部</option>
+            <option value="飲食">飲食</option>
+            <option value="交通">交通</option>
+            <option value="購物">購物</option>
+            <option value="住宿">住宿</option>
+            <option value="娛樂">娛樂</option>
+            <option value="其他">其他</option>
+          </select>
         </div>
-    </div>
-
-    <!-- Modal: Import -->
-    <div id="importModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 border border-purple-100 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-file-import mr-2 text-purple-600"></i> 智慧匯入記帳資料</h3>
-                <button onclick="closeModal('importModal')" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <input type="file" id="importFile" accept=".json, .csv" class="w-full text-xs text-slate-500">
-            <div class="flex justify-end space-x-3 pt-2">
-                <button onclick="closeModal('importModal')" class="px-4 py-2 bg-slate-100 text-xs rounded-xl">取消</button>
-                <button onclick="processImportFile()" class="px-4 py-2 bg-purple-600 text-white text-xs rounded-xl">確認智慧匯入</button>
-            </div>
+        <div class="filter-group">
+          <button class="btn btn-outline btn-sm" onclick="toggleDateSort()">
+            日期排序：<span id="sortDirectionText">新到舊 ↓</span>
+          </button>
         </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="toggleDateSort()">日期 ⬍</th>
+              <th>分類</th>
+              <th>說明</th>
+              <th>幣別</th>
+              <th style="text-align: right;">金額</th>
+              <th style="text-align: center;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="recordTableBody">
+            <!-- 動態填入 -->
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        let defaultCategories = [
-        "餐飲美食",
-        "交通通勤",
-        "住宿飯店",
-        "觀光娛樂",
-        "購物消費",
-        "生活雜費",
-        "必要支出",
-        "超市",
-        "日用品",
-        "休閒娛樂",
-        "日常外食",
-        "旅遊"
-];
-        
-        let defaultCountries = {
-            "德國": {
-                        "name": "德國",
-                        "flag": "🇩🇪",
-                        "cities": [
-                                    "德勒斯登 (Dresden)",
-                                    "柏林 (Berlin)",
-                                    "慕尼黑 (Munich)",
-                                    "萊比錫 (Leipzig)",
-                                    "科隆 (Cologne)",
-                                    "法蘭克福 (Frankfurt)"
-                        ]
-            },
-            "捷克": {
-                        "name": "捷克",
-                        "flag": "🇨🇿",
-                        "cities": [
-                                    "布拉格 (Prague)",
-                                    "庫倫洛夫 (Český Krumlov)"
-                        ]
-            },
-            "斯洛伐克": {
-                        "name": "斯洛伐克",
-                        "flag": "🇸🇰",
-                        "cities": [
-                                    "布拉蒂斯拉發 (Bratislava)",
-                                    "科希策 (Košice)"
-                        ]
-            },
-            "奧地利": {
-                        "name": "奧地利",
-                        "flag": "🇦🇹",
-                        "cities": [
-                                    "維也納 (Vienna)",
-                                    "薩爾斯堡 (Salzburg)"
-                        ]
-            }
-};
+  <script>
+    const STORAGE_KEY = 'accounting_v15_3_records';
+    const API_URL_KEY = 'accounting_v15_3_apps_script_url';
 
-        let defaultRatesToEUR = { 'TWD': 0.029, 'CZK': 0.040, 'USD': 0.930, 'JPY': 0.0061 };
+    let records = [];
+    let sortDescending = true; // true = 新到舊, false = 舊到新
+    let apiUrl = localStorage.getItem(API_URL_KEY) || '';
 
-        let categories = [];
+    // 初始化載入
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('recordDate').value = new Date().toISOString().split('T')[0];
+      loadLocalRecords();
+      updateSyncStatusUI();
+      if (apiUrl) {
+        syncWithCloud();
+      }
+    });
 
-        // 國家中英文標準化對照函式
-        
-        // 城市名稱標準化與對應函式
-        
-        // 將任何日期格式標準化為 input[type=date] 接受的 YYYY-MM-DD
-        function formatDateForInput(dateStr) {
-            if (!dateStr) return '';
-            let s = dateStr.toString().trim().replace(/\//g, '-');
-            let parts = s.split('-');
-            if (parts.length === 3) {
-                let y = parts[0];
-                let m = parts[1].padStart(2, '0');
-                let d = parts[2].padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
-            return s;
+    function loadLocalRecords() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        records = stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        console.error('讀取本地資料失敗:', e);
+        records = [];
+      }
+      renderTable();
+      updateSummary();
+    }
+
+    function saveLocalRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      renderTable();
+      updateSummary();
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const date = document.getElementById('recordDate').value;
+      const category = document.getElementById('recordCategory').value;
+      const amount = parseFloat(document.getElementById('recordAmount').value);
+      const currency = document.getElementById('recordCurrency').value;
+      const desc = document.getElementById('recordDesc').value.trim();
+
+      const newRecord = {
+        id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        date: date,
+        category: category,
+        amount: amount,
+        currency: currency,
+        desc: desc,
+        timestamp: Date.now()
+      };
+
+      records.push(newRecord);
+      saveLocalRecords();
+      document.getElementById('recordDesc').value = '';
+      document.getElementById('recordAmount').value = '';
+
+      // 若有設定雲端，非同步背景同步
+      if (apiUrl) {
+        syncSingleRecordToCloud(newRecord);
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('recordTableBody');
+      const filterCat = document.getElementById('filterCategory').value;
+
+      let displayList = [...records];
+
+      if (filterCat !== 'ALL') {
+        displayList = displayList.filter(r => r.category === filterCat);
+      }
+
+      displayList.sort((a, b) => {
+        const dateA = new Date(a.date).getTime() || 0;
+        const dateB = new Date(b.date).getTime() || 0;
+        if (dateA !== dateB) {
+          return sortDescending ? (dateB - dateA) : (dateA - dateB);
         }
+        return sortDescending ? ((b.timestamp || 0) - (a.timestamp || 0)) : ((a.timestamp || 0) - (b.timestamp || 0));
+      });
 
-        function normalizeCityName(countryName, cityName) {
-            if (!cityName) return '';
-            let c = cityName.toString().trim();
-            const cityMap = {
-                'Leipzig': '萊比錫 (Leipzig)', '萊比錫': '萊比錫 (Leipzig)',
-                'Munich': '慕尼黑 (Munich)', '慕尼黑': '慕尼黑 (Munich)',
-                'Prague': '布拉格 (Prague)', '布拉格': '布拉格 (Prague)',
-                'Vienna': '維也納 (Vienna)', '維也納': '維也納 (Vienna)',
-                'Bratislava': '布拉蒂斯拉發 (Bratislava)', '布拉蒂斯拉發': '布拉蒂斯拉發 (Bratislava)',
-                'Dresden': '德勒斯登 (Dresden)', '德勒斯登': '德勒斯登 (Dresden)',
-                'Berlin': '柏林 (Berlin)', '柏林': '柏林 (Berlin)',
-                'Frankfurt': '法蘭克福 (Frankfurt)', '法蘭克福': '法蘭克福 (Frankfurt)',
-                'Salzburg': '薩爾斯堡 (Salzburg)', '薩爾斯堡': '薩爾斯堡 (Salzburg)',
-                'Krumlov': '庫倫洛夫 (Český Krumlov)', 'Český Krumlov': '庫倫洛夫 (Český Krumlov)', '庫倫洛夫': '庫倫洛夫 (Český Krumlov)'
-            };
-            if (cityMap[c]) return cityMap[c];
-            return c;
+      if (displayList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">尚無記錄</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = displayList.map(r => `
+        <tr>
+          <td>${r.date}</td>
+          <td><span class="tag">${r.category}</span></td>
+          <td>${escapeHtml(r.desc || '-')}</td>
+          <td>${r.currency}</td>
+          <td style="text-align: right;" class="amount amount-out">
+            ${r.currency === 'EUR' ? '€' : 'NT$'} ${r.amount.toFixed(2)}
+          </td>
+          <td style="text-align: center;">
+            <button class="btn btn-outline btn-sm" style="color: var(--danger);" onclick="deleteRecord('${r.id}')">刪除</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleDateSort() {
+      sortDescending = !sortDescending;
+      document.getElementById('sortDirectionText').textContent = sortDescending ? '新到舊 ↓' : '舊到新 ↑';
+      renderTable();
+    }
+
+    function deleteRecord(id) {
+      if (!confirm('確定要刪除這筆記帳紀錄嗎？')) return;
+      records = records.filter(r => r.id !== id);
+      saveLocalRecords();
+      if (apiUrl) {
+        // 可選：發送刪除訊號至雲端或下次全量同步
+        syncWithCloud();
+      }
+    }
+
+    function updateSummary() {
+      let totalEur = 0;
+      let totalTwd = 0;
+
+      records.forEach(r => {
+        if (r.currency === 'EUR') totalEur += r.amount;
+        if (r.currency === 'TWD') totalTwd += r.amount;
+      });
+
+      document.getElementById('totalExpenseEur').textContent = `€${totalEur.toFixed(2)}`;
+      document.getElementById('totalExpenseTwd').textContent = `NT$${Math.round(totalTwd).toLocaleString()}`;
+      document.getElementById('recordCount').textContent = records.length;
+    }
+
+    function updateSyncStatusUI(status = 'idle') {
+      const dot = document.getElementById('syncDot');
+      const text = document.getElementById('syncStatus');
+
+      if (!apiUrl) {
+        dot.className = 'status-dot';
+        text.textContent = '本地模式 (未串接雲端)';
+        return;
+      }
+
+      if (status === 'syncing') {
+        dot.className = 'status-dot syncing';
+        text.textContent = '雲端同步中...';
+      } else if (status === 'success') {
+        dot.className = 'status-dot online';
+        text.textContent = '已與雲端同步';
+      } else if (status === 'error') {
+        dot.className = 'status-dot';
+        dot.style.background = 'var(--danger)';
+        text.textContent = '同步失敗 (離線緩存生效中)';
+      } else {
+        dot.className = 'status-dot online';
+        text.textContent = '雲端已連線';
+      }
+    }
+
+    function openConfigModal() {
+      const currentUrl = localStorage.getItem(API_URL_KEY) || '';
+      const input = prompt('請輸入 Google Apps Script Web App URL：', currentUrl);
+      if (input !== null) {
+        localStorage.setItem(API_URL_KEY, input.trim());
+        apiUrl = input.trim();
+        updateSyncStatusUI();
+        if (apiUrl) syncWithCloud();
+      }
+    }
+
+    async function syncWithCloud() {
+      if (!apiUrl) {
+        alert('尚未設定 Google Apps Script Web App URL。請點擊「設定 API」輸入。');
+        return;
+      }
+      updateSyncStatusUI('syncing');
+      try {
+        const resp = await fetch(apiUrl + '?action=getRecords');
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+          // 合併雲端與本機紀錄（以 ID 去重）
+          const recordMap = new Map();
+          records.forEach(r => recordMap.set(r.id, r));
+          data.forEach(r => recordMap.set(r.id, r));
+          records = Array.from(recordMap.values());
+          saveLocalRecords();
+          updateSyncStatusUI('success');
+        } else {
+          updateSyncStatusUI('error');
         }
+      } catch (err) {
+        console.warn('雲端拉取失敗，繼續使用本機緩存：', err);
+        updateSyncStatusUI('error');
+      }
+    }
 
-        function normalizeCountryName(c) {
-            if (!c) return '德國';
-            const map = {
-                'Germany': '德國', 'GERMANY': '德國', '德國': '德國',
-                'Czech Republic': '捷克', 'Czechia': '捷克', 'Czech': '捷克', '捷克': '捷克',
-                'Slovakia': '斯洛伐克', '斯洛伐克': '斯洛伐克',
-                'Austria': '奧地利', '奧地利': '奧地利'
-            };
-            return map[c] || c;
-        }
-
-        let countries = {};
-        let expenses = [];
-        let categoryChartInstance = null;
-
-        const sampleExpenses = [
-            {
-                        "id": "1791931931329",
-                        "date": "2026-10-14",
-                        "ledger": "daily",
-                        "title": "fraenk 9月網路費",
-                        "category": "必要支出",
-                        "subCategory": "娛樂",
-                        "amount": 4.67,
-                        "country": "德國",
-                        "city": "德勒斯登 (Dresden)"
-            },
-            {
-                        "id": "17919249324360.709110321060432",
-                        "date": "2026/9/16",
-                        "ledger": "daily",
-                        "title": "ADGSN",
-                        "category": "必要支出",
-                        "amount": 42,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.7848331817544226",
-                        "date": "2026/9/17",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 7.48,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.556573661604167",
-                        "date": "2026/9/18",
-                        "ledger": "daily",
-                        "title": "9月租金+押金差額",
-                        "category": "必要支出",
-                        "amount": 126.54,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.7511366177385367",
-                        "date": "2026/9/18",
-                        "ledger": "daily",
-                        "title": "DM",
-                        "category": "日用品",
-                        "amount": 20.25,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.4220465390766982",
-                        "date": "2026/9/19",
-                        "ledger": "daily",
-                        "title": "Asia",
-                        "category": "超市",
-                        "amount": 11.12,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.18656590580809707",
-                        "date": "2026/9/19",
-                        "ledger": "daily",
-                        "title": "Combuy",
-                        "category": "休閒娛樂",
-                        "amount": 6.1,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.7924166036641328",
-                        "date": "2026/9/19",
-                        "ledger": "daily",
-                        "title": "EDEKA",
-                        "category": "超市",
-                        "amount": 7,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.3558669293641734",
-                        "date": "2026/9/19",
-                        "ledger": "daily",
-                        "title": "MediaMarkt",
-                        "category": "日用品",
-                        "amount": 4.99,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.3250102557161728",
-                        "date": "2026/9/19",
-                        "ledger": "daily",
-                        "title": "DM",
-                        "category": "日用品",
-                        "amount": 8.9,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.17487919115860961",
-                        "date": "2026/9/19",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 7.87,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.12120402155313859",
-                        "date": "2026/9/21",
-                        "ledger": "daily",
-                        "title": "go",
-                        "category": "超市",
-                        "amount": 4.8,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.9643217306408806",
-                        "date": "2026/9/21",
-                        "ledger": "daily",
-                        "title": "woolworth",
-                        "category": "日用品",
-                        "amount": 9,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.8739477394881289",
-                        "date": "2026/9/21",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "超市",
-                        "amount": 12.34,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.9253668686834389",
-                        "date": "2026/9/22",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "超市",
-                        "amount": 5.5,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.9644754279509915",
-                        "date": "2026/9/22",
-                        "ledger": "daily",
-                        "title": "KeXerei",
-                        "category": "休閒娛樂",
-                        "amount": 4.7,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.2065036321301561",
-                        "date": "2026/9/22",
-                        "ledger": "daily",
-                        "title": "CAMONDAS巧克力冰",
-                        "category": "休閒娛樂",
-                        "amount": 3.2,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.45426180916432635",
-                        "date": "2026/9/23",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "日用品",
-                        "amount": 19.99,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.2604638156618132",
-                        "date": "2026/9/23",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "超市",
-                        "amount": 2.62,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.06899979600810635",
-                        "date": "2026/9/23",
-                        "ledger": "daily",
-                        "title": "pizzaland",
-                        "category": "日常外食",
-                        "amount": 4.15,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.836012384528531",
-                        "date": "2026/9/24",
-                        "ledger": "daily",
-                        "title": "TEDI",
-                        "category": "日用品",
-                        "amount": 3.25,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.11987761320411405",
-                        "date": "2026/9/24",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 6.03,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.367150883086769",
-                        "date": "2026/9/25",
-                        "ledger": "daily",
-                        "title": "McDonald",
-                        "category": "日常外食",
-                        "amount": 4.89,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.45781153928667817",
-                        "date": "2026/9/25",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 7.12,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.2848943363445702",
-                        "date": "2026/9/25",
-                        "ledger": "daily",
-                        "title": "go",
-                        "category": "日常外食",
-                        "amount": 5,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.6063171589441736",
-                        "date": "2026/9/26",
-                        "ledger": "daily",
-                        "title": "DM",
-                        "category": "超市",
-                        "amount": 1.9,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.35543367414887994",
-                        "date": "2026/9/26",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 1.24,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.7240564724914489",
-                        "date": "2026/9/27",
-                        "ledger": "daily",
-                        "title": "Combuy",
-                        "category": "休閒娛樂",
-                        "amount": 5.7,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.04121888888275116",
-                        "date": "2026/9/28",
-                        "ledger": "daily",
-                        "title": "Backwerk",
-                        "category": "日常外食",
-                        "amount": 3.9,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.27481198301898735",
-                        "date": "2026/9/28",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 3.58,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.1481212375126657",
-                        "date": "2026/9/29",
-                        "ledger": "daily",
-                        "title": "Backwerk",
-                        "category": "日常外食",
-                        "amount": 5.3,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.8726249135454051",
-                        "date": "2026/9/29",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "超市",
-                        "amount": 3.28,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.7303163927116203",
-                        "date": "2026/9/29",
-                        "ledger": "daily",
-                        "title": "BBQ",
-                        "category": "休閒娛樂",
-                        "amount": 2.5,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.0580486569724894",
-                        "date": "2026/9/29",
-                        "ledger": "daily",
-                        "title": "card",
-                        "category": "日用品",
-                        "amount": 10,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.2604507400217547",
-                        "date": "2026/9/30",
-                        "ledger": "daily",
-                        "title": "Combuy",
-                        "category": "日常外食",
-                        "amount": 5.7,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.25933380499773384",
-                        "date": "2026/9/30",
-                        "ledger": "daily",
-                        "title": "crawl",
-                        "category": "休閒娛樂",
-                        "amount": 6.6,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.8535927043348671",
-                        "date": "2026/10/1",
-                        "ledger": "daily",
-                        "title": "Bowling",
-                        "category": "休閒娛樂",
-                        "amount": 5.6,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.23224788887561687",
-                        "date": "2026/10/1",
-                        "ledger": "daily",
-                        "title": "EDEKA",
-                        "category": "超市",
-                        "amount": 5.73,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.7158853155154992",
-                        "date": "2026/10/2",
-                        "ledger": "daily",
-                        "title": "IKEA",
-                        "category": "日常外食",
-                        "amount": 7.9,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.9822248108965721",
-                        "date": "2026/10/2",
-                        "ledger": "daily",
-                        "title": "Party",
-                        "category": "休閒娛樂",
-                        "amount": 1,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.9892485752907705",
-                        "date": "2026-10-03",
-                        "ledger": "travel",
-                        "title": "午餐+下午茶+晚餐",
-                        "category": "旅遊",
-                        "subCategory": "食",
-                        "amount": 24.9,
-                        "country": "德國",
-                        "city": "萊比錫 (Leipzig)"
-            },
-            {
-                        "id": "17919249324360.10055711276218582",
-                        "date": "2026-10-03",
-                        "ledger": "travel",
-                        "title": "戰爭博物館門票",
-                        "category": "旅遊",
-                        "subCategory": "娛樂",
-                        "amount": 10,
-                        "country": "德國",
-                        "city": "萊比錫 (Leipzig)"
-            },
-            {
-                        "id": "17919249324360.6006466045922545",
-                        "date": "2026/10/4",
-                        "ledger": "daily",
-                        "title": "Doner",
-                        "category": "日常外食",
-                        "amount": 7.5,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.6764676083651542",
-                        "date": "2026/10/4",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 1.78,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.06250202402450622",
-                        "date": "2026/10/5",
-                        "ledger": "daily",
-                        "title": "combuy",
-                        "category": "休閒娛樂",
-                        "amount": 5.7,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.5447571174759529",
-                        "date": "2026/10/5",
-                        "ledger": "daily",
-                        "title": "Grlato",
-                        "category": "休閒娛樂",
-                        "amount": 2.2,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.44547034511280037",
-                        "date": "2026/10/5",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 6.61,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.877846692273044",
-                        "date": "2026/10/6",
-                        "ledger": "daily",
-                        "title": "洗衣服",
-                        "category": "日用品",
-                        "amount": 2.4,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.08191827614304925",
-                        "date": "2026/10/6",
-                        "ledger": "daily",
-                        "title": "IKEA",
-                        "category": "日常外食",
-                        "amount": 7.95,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.9818340036239493",
-                        "date": "2026/10/6",
-                        "ledger": "daily",
-                        "title": "IKEA",
-                        "category": "日用品",
-                        "amount": 0.5,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.6010472690216067",
-                        "date": "2026/10/6",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "超市",
-                        "amount": 9.95,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.04263096057985072",
-                        "date": "2026/10/7",
-                        "ledger": "daily",
-                        "title": "TEDI",
-                        "category": "日用品",
-                        "amount": 1,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324360.840845650782808",
-                        "date": "2026/10/7",
-                        "ledger": "daily",
-                        "title": "woolworth",
-                        "category": "日用品",
-                        "amount": 12,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.09017965231622638",
-                        "date": "2026/10/8",
-                        "ledger": "daily",
-                        "title": "台灣人聚餐-晚餐",
-                        "category": "日常外食",
-                        "amount": 21.2,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.6732161618670157",
-                        "date": "2026/10/8",
-                        "ledger": "daily",
-                        "title": "10月租金",
-                        "category": "必要支出",
-                        "amount": 242.87,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.33481921596100295",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "flixbus來回",
-                        "category": "旅遊",
-                        "subCategory": "行",
-                        "amount": 71.05,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.11933012102240981",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "國王湖一日遊",
-                        "category": "旅遊",
-                        "subCategory": "娛樂",
-                        "amount": 104,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.8814373112965338",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "Booking",
-                        "category": "旅遊",
-                        "subCategory": "住",
-                        "amount": 43.34,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.901084480214361",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "國王湖磁鐵",
-                        "category": "旅遊",
-                        "subCategory": "娛樂",
-                        "amount": 7,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.6729201790780758",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "國王湖船票加價",
-                        "category": "旅遊",
-                        "subCategory": "娛樂",
-                        "amount": 7,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.25917362594156845",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "小費",
-                        "category": "旅遊",
-                        "subCategory": "娛樂",
-                        "amount": 4.5,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.9963318835225222",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "國王湖餐廳",
-                        "category": "旅遊",
-                        "subCategory": "食",
-                        "amount": 9.8,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.7832418948967708",
-                        "date": "2026-10-09",
-                        "ledger": "travel",
-                        "title": "麵刺郎",
-                        "category": "旅遊",
-                        "subCategory": "食",
-                        "amount": 16.9,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.674245490412083",
-                        "date": "2026-10-10",
-                        "ledger": "travel",
-                        "title": "Venchi",
-                        "category": "旅遊",
-                        "subCategory": "食",
-                        "amount": 7.3,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.6145112839489925",
-                        "date": "2026-10-10",
-                        "ledger": "travel",
-                        "title": "慕尼黑磁鐵+明信片",
-                        "category": "旅遊",
-                        "subCategory": "娛樂",
-                        "amount": 6.5,
-                        "country": "德國",
-                        "city": "慕尼黑 (Munich)"
-            },
-            {
-                        "id": "17919249324370.056390926159257226",
-                        "date": "2026/10/10",
-                        "ledger": "daily",
-                        "title": "Müller-水",
-                        "category": "超市",
-                        "amount": 1.04,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.2146677687624089",
-                        "date": "2026/10/10",
-                        "ledger": "daily",
-                        "title": "亞超",
-                        "category": "超市",
-                        "amount": 3.32,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.782607402015383",
-                        "date": "2026/10/11",
-                        "ledger": "daily",
-                        "title": "洗衣服",
-                        "category": "日用品",
-                        "amount": 2.4,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.2374378400534395",
-                        "date": "2026/10/12",
-                        "ledger": "daily",
-                        "title": "Netto",
-                        "category": "日常外食",
-                        "amount": 0.79,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.26291684566067774",
-                        "date": "2026/10/12",
-                        "ledger": "daily",
-                        "title": "REWE",
-                        "category": "超市",
-                        "amount": 9.4,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.029234105975379454",
-                        "date": "2026/10/13",
-                        "ledger": "daily",
-                        "title": "IKEA",
-                        "category": "日常外食",
-                        "amount": 9.9,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.34521666185331223",
-                        "date": "2026/10/13",
-                        "ledger": "daily",
-                        "title": "IKEA",
-                        "category": "日用品",
-                        "amount": 1.99,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.8958772221467489",
-                        "date": "2026/10/13",
-                        "ledger": "daily",
-                        "title": "Combuy",
-                        "category": "日常外食",
-                        "amount": 5.7,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.2943938875372145",
-                        "date": "2026/10/13",
-                        "ledger": "daily",
-                        "title": "Lidl",
-                        "category": "超市",
-                        "amount": 2.83,
-                        "country": "Germany",
-                        "city": "Dresden"
-            },
-            {
-                        "id": "17919249324370.9715005548384184",
-                        "date": "2026-10-15",
-                        "ledger": "travel",
-                        "title": "Flixbus to Prague",
-                        "category": "旅遊",
-                        "subCategory": "行",
-                        "amount": 12.23,
-                        "country": "捷克",
-                        "city": "布拉格 (Prague)"
-            },
-            {
-                        "id": "17919249324370.748659944007669",
-                        "date": "2026-10-15",
-                        "ledger": "travel",
-                        "title": "布拉格住宿 2 nights",
-                        "category": "旅遊",
-                        "subCategory": "住",
-                        "amount": 53.07,
-                        "country": "捷克",
-                        "city": "布拉格 (Prague)"
-            },
-            {
-                        "id": "17919249324370.45108695614330285",
-                        "date": "2026-10-17",
-                        "ledger": "travel",
-                        "title": "rejiojet to krumlov",
-                        "category": "旅遊",
-                        "subCategory": "行",
-                        "amount": 5.73,
-                        "country": "捷克",
-                        "city": "布拉格 (Prague)"
-            },
-            {
-                        "id": "17919249324370.5045405524282638",
-                        "date": "2026-10-17",
-                        "ledger": "travel",
-                        "title": "Flixbus to Vienna",
-                        "category": "旅遊",
-                        "subCategory": "行",
-                        "amount": 14.93,
-                        "country": "奧地利",
-                        "city": "維也納 (Vienna)"
-            },
-            {
-                        "id": "17919249324370.3877299179032172",
-                        "date": "2026-10-17",
-                        "ledger": "travel",
-                        "title": "維也納住宿 2 nights",
-                        "category": "旅遊",
-                        "subCategory": "住",
-                        "amount": 31.52,
-                        "country": "奧地利",
-                        "city": "維也納 (Vienna)"
-            },
-            {
-                        "id": "17919249324370.9382427061473441",
-                        "date": "2026-10-19",
-                        "ledger": "travel",
-                        "title": "Flixbus to Dresden",
-                        "category": "旅遊",
-                        "subCategory": "行",
-                        "amount": 37.51,
-                        "country": "斯洛伐克",
-                        "city": "布拉蒂斯拉發 (Bratislava)"
-            }
-];
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            loadFromLocalStorage();
-            renderAll();
+    async function syncSingleRecordToCloud(record) {
+      if (!apiUrl) return;
+      try {
+        await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'addRecord', record: record })
         });
-
-        function loadSettings() {
-            const savedCats = localStorage.getItem('exchange_categories_v14');
-            categories = savedCats ? JSON.parse(savedCats) : [...defaultCategories];
-
-            const savedCountries = localStorage.getItem('exchange_countries_v14');
-            countries = savedCountries ? JSON.parse(savedCountries) : JSON.parse(JSON.stringify(defaultCountries));
-
-            populateDropdowns();
-            renderSettingsUI();
-        }
-
-        function saveCategories() { localStorage.setItem('exchange_categories_v14', JSON.stringify(categories)); }
-        function saveCountries() { localStorage.setItem('exchange_countries_v14', JSON.stringify(countries)); }
-
-        function loadFromLocalStorage() {
-            // Check multiple possible keys to ensure no data loss across previous versions
-            let data = localStorage.getItem('exchange_expenses_v14') || 
-                       localStorage.getItem('exchange_expenses_v12') || 
-                       localStorage.getItem('exchange_expenses_v11') || 
-                       localStorage.getItem('exchange_expenses');
-            if (data) {
-                try { expenses = JSON.parse(data); } catch(e) { expenses = sampleExpenses; }
-            } else {
-                expenses = sampleExpenses;
-                saveToLocalStorage();
-            }
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('exchange_expenses_v14', JSON.stringify(expenses));
-        }
-
-        function populateDropdowns() {
-            const catSelect = document.getElementById('expenseCategory');
-            catSelect.innerHTML = '';
-            categories.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c; opt.textContent = c; catSelect.appendChild(opt);
-            });
-
-            const countrySelect = document.getElementById('expenseCountry');
-            countrySelect.innerHTML = '';
-            for (const [key, info] of Object.entries(countries)) {
-                const opt = document.createElement('option');
-                opt.value = key; opt.textContent = `${info.flag} ${info.name}`; countrySelect.appendChild(opt);
-            }
-            updateCityDropdown();
-
-            const setCountrySelect = document.getElementById('cityCountrySelect');
-            setCountrySelect.innerHTML = '';
-            for (const [key, info] of Object.entries(countries)) {
-                const opt = document.createElement('option');
-                opt.value = key; opt.textContent = `${info.flag} ${info.name}`; setCountrySelect.appendChild(opt);
-            }
-
-            const filterCountrySelect = document.getElementById('filterCountry');
-            const currentFilter = filterCountrySelect.value;
-            filterCountrySelect.innerHTML = '<option value="all">全部國家</option>';
-            for (const [key, info] of Object.entries(countries)) {
-                const opt = document.createElement('option');
-                opt.value = key; opt.textContent = `${info.flag} ${info.name}`; filterCountrySelect.appendChild(opt);
-            }
-            filterCountrySelect.value = currentFilter;
-        }
-
-        function updateCityDropdown() {
-            const countryKey = document.getElementById('expenseCountry').value;
-            const citySelect = document.getElementById('expenseCity');
-            citySelect.innerHTML = '';
-            if (countries[countryKey] && countries[countryKey].cities) {
-                countries[countryKey].cities.forEach(city => {
-                    const opt = document.createElement('option');
-                    opt.value = city; opt.textContent = city; citySelect.appendChild(opt);
-                });
-            }
-        }
-
-        function toggleLedgerFields() {
-            const ledger = document.getElementById('ledgerType').value;
-            const travelContainer = document.getElementById('travelLocationContainer');
-            if (ledger === 'travel') { travelContainer.classList.remove('hidden'); }
-            else { travelContainer.classList.add('hidden'); }
-        }
-
-        function renderSettingsUI() {
-            const catContainer = document.getElementById('categoryTagsContainer');
-            catContainer.innerHTML = '';
-            categories.forEach(cat => {
-                const span = document.createElement('span');
-                span.className = 'inline-flex items-center px-3 py-1 bg-white border border-purple-200 text-purple-800 rounded-xl text-xs font-medium shadow-sm';
-                span.innerHTML = `${cat} <button onclick="deleteCategory('${cat}')" class="ml-2 text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>`;
-                catContainer.appendChild(span);
-            });
-
-            const ccContainer = document.getElementById('countryCityListContainer');
-            ccContainer.innerHTML = '';
-            for (const [key, info] of Object.entries(countries)) {
-                const div = document.createElement('div');
-                div.className = 'bg-white p-3 rounded-xl border border-slate-100 space-y-2';
-                let citiesHtml = info.cities.map(city => `
-                    <span class="inline-flex items-center px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium mr-1.5 mb-1">
-                        ${city}
-                        <button onclick="deleteCity('${key}', '${city}')" class="ml-1.5 text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
-                    </span>
-                `).join('');
-                div.innerHTML = `
-                    <div class="flex items-center justify-between font-bold text-slate-800 text-xs">
-                        <span>${info.flag} ${info.name}</span>
-                        <button onclick="deleteCountry('${key}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash mr-1"></i>刪除</button>
-                    </div>
-                    <div class="flex flex-wrap pt-1">${citiesHtml || '<span class="text-xs text-slate-400">尚無城市</span>'}</div>
-                `;
-                ccContainer.appendChild(div);
-            }
-        }
-
-        function addCategory() {
-            const val = document.getElementById('newCategoryInput').value.trim();
-            if (!val) { alert('請輸入類別名稱'); return; }
-            if (categories.includes(val)) { alert('類別已存在'); return; }
-            categories.push(val); saveCategories();
-            document.getElementById('newCategoryInput').value = '';
-            populateDropdowns(); renderSettingsUI();
-        }
-
-        function deleteCategory(cat) {
-            if (categories.length <= 1) { alert('至少保留一個類別'); return; }
-            if (confirm(`確定刪除 ${cat}？`)) {
-                categories = categories.filter(c => c !== cat);
-                saveCategories(); populateDropdowns(); renderSettingsUI();
-            }
-        }
-
-        function addCountry() {
-            const name = document.getElementById('newCountryName').value.trim();
-            const flag = document.getElementById('newCountryFlag').value.trim() || '🏳️';
-            if (!name) { alert('請輸入國家名稱'); return; }
-            if (countries[name]) { alert('國家已存在'); return; }
-            countries[name] = { name: name, flag: flag, cities: [] };
-            saveCountries();
-            document.getElementById('newCountryName').value = '';
-            document.getElementById('newCountryFlag').value = '';
-            populateDropdowns(); renderSettingsUI();
-        }
-
-        function deleteCountry(key) {
-            if (confirm(`確定刪除國家 ${countries[key].name} 及其所有城市？`)) {
-                delete countries[key]; saveCountries(); populateDropdowns(); renderSettingsUI();
-            }
-        }
-
-        function addCity() {
-            const countryKey = document.getElementById('cityCountrySelect').value;
-            const cityName = document.getElementById('newCityName').value.trim();
-            if (!cityName) { alert('請輸入城市名稱'); return; }
-            if (!countries[countryKey]) { alert('請先選擇國家'); return; }
-            if (countries[countryKey].cities.includes(cityName)) { alert('城市已存在'); return; }
-            countries[countryKey].cities.push(cityName);
-            saveCountries();
-            document.getElementById('newCityName').value = '';
-            populateDropdowns(); renderSettingsUI();
-        }
-
-        function deleteCity(countryKey, cityName) {
-            if (countries[countryKey]) {
-                countries[countryKey].cities = countries[countryKey].cities.filter(c => c !== cityName);
-                saveCountries(); populateDropdowns(); renderSettingsUI();
-            }
-        }
-
-        function calculateCurrency() {
-            const amt = parseFloat(document.getElementById('calcAmount').value) || 0;
-            const curr = document.getElementById('calcCurrency').value;
-            const rate = defaultRatesToEUR[curr] || 1.0;
-            document.getElementById('calcResultDisplay').innerText = `€ ${(amt * rate).toFixed(2)}`;
-        }
-
-        function openAddModal() {
-            document.getElementById('expenseId').value = '';
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('expenseDate').value = `${yyyy}-${mm}-${dd}`;
-            document.getElementById('ledgerType').value = 'daily';
-            document.getElementById('expenseAmount').value = '';
-            document.getElementById('expenseTitle').value = '';
-            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square mr-2"></i> 新增支出紀錄 (EUR)';
-            toggleLedgerFields();
-            document.getElementById('addModal').classList.remove('hidden');
-        }
-
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-        function saveExpense() {
-            const id = document.getElementById('expenseId').value;
-            const date = document.getElementById('expenseDate').value;
-            const ledger = document.getElementById('ledgerType').value;
-            const title = document.getElementById('expenseTitle').value.trim();
-            const category = document.getElementById('expenseCategory').value;
-            const amountVal = document.getElementById('expenseAmount').value;
-
-            if (!date || !amountVal || isNaN(parseFloat(amountVal)) || !title) {
-                alert('請完整填寫日期、有效金額與品項名稱！');
-                return;
-            }
-
-            const amount = parseFloat(amountVal);
-            let country = '德國';
-            let city = '德勒斯登 (Dresden)';
-
-            if (ledger === 'travel') {
-                country = document.getElementById('expenseCountry').value;
-                city = document.getElementById('expenseCity').value;
-            } else {
-                country = '德國';
-                city = '德勒斯登 (Dresden)';
-            }
-
-            if (id) {
-                const idx = expenses.findIndex(e => e.id === id);
-                const subCategory = document.getElementById("expenseSubCategory").value;
-                if (idx !== -1) { expenses[idx] = { id, date, ledger, title, category, subCategory, amount, country, city }; }
-            } else {
-                const subCategory = document.getElementById('expenseSubCategory').value;
-            expenses.unshift({ id: Date.now().toString(), date, ledger, title, category, subCategory, amount, country, city });
-            }
-
-            saveToLocalStorage();
-            closeModal('addModal');
-            renderAll();
-        }
-
-        function editExpense(id) {
-            const item = expenses.find(e => e.id === id);
-            if (!item) return;
-
-            document.getElementById('expenseId').value = item.id;
-            document.getElementById('expenseDate').value = formatDateForInput(item.date);
-            document.getElementById('ledgerType').value = item.ledger || 'daily';
-            toggleLedgerFields();
-            document.getElementById('expenseAmount').value = item.amount;
-            document.getElementById('expenseCategory').value = item.category;
-            document.getElementById('expenseTitle').value = item.title;
-            document.getElementById('expenseSubCategory').value = item.subCategory || '食';
-            if (item.ledger === 'travel') {
-                const normC = normalizeCountryName(item.country || '德國');
-                document.getElementById('expenseCountry').value = normC;
-                updateCityDropdown();
-                
-                const normCity = normalizeCityName(normC, item.city || '');
-                const citySelect = document.getElementById('expenseCity');
-                let matchedOptValue = null;
-                
-                // 先在現有選項中找有沒有符合或包含的
-                for (let opt of citySelect.options) {
-                    if (opt.value === normCity || 
-                        opt.value.toLowerCase() === (item.city || '').toLowerCase() || 
-                        opt.value.toLowerCase().includes((item.city || '').toLowerCase()) ||
-                        (item.city && item.city.toLowerCase().includes(opt.value.toLowerCase()))) {
-                        matchedOptValue = opt.value;
-                        break;
-                    }
-                }
-                
-                // 若選項中完全沒有這個城市，自動動態新增選項並套用上去！
-                if (!matchedOptValue) {
-                    const newCityOptionText = normCity || item.city || '未知城市';
-                    const newOpt = document.createElement('option');
-                    newOpt.value = newCityOptionText;
-                    newOpt.textContent = newCityOptionText;
-                    citySelect.appendChild(newOpt);
-                    matchedOptValue = newCityOptionText;
-                    
-                    // 同步寫入國家列表，讓後續都能永久使用
-                    if (countries[normC] && countries[normC].cities && !countries[normC].cities.includes(newCityOptionText)) {
-                        countries[normC].cities.push(newCityOptionText);
-                        saveCountries();
-                    }
-                }
-                
-                citySelect.value = matchedOptValue;
-            }
-            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square mr-2"></i> 編輯支出紀錄';
-            document.getElementById('addModal').classList.remove('hidden');
-        }
-
-        function deleteExpense(id) {
-            if (confirm('確定要刪除這筆紀錄嗎？')) {
-                expenses = expenses.filter(e => e.id !== id);
-                saveToLocalStorage(); renderAll();
-            }
-        }
-
-        function resetDataPrompt() {
-            if (confirm('警告：這將清空所有記帳資料，是否確定？')) {
-                expenses = []; saveToLocalStorage(); renderAll();
-            }
-        }
-
-        function resetFilters() {
-            document.getElementById('filterStartDate').value = '';
-            document.getElementById('filterEndDate').value = '';
-            document.getElementById('filterCountry').value = 'all';
-            document.getElementById('searchInput').value = '';
-            filterExpenses();
-        }
-
-        function renderAll() {
-            filterExpenses();
-        }
-
-        function filterExpenses() {
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
-            const filterCountry = document.getElementById('filterCountry').value;
-            const ledgerType = document.getElementById('ledgerFilter').value;
-            const query = document.getElementById('searchInput').value.toLowerCase();
-
-            const filtered = expenses.filter(item => {
-                const matchLedger = (ledgerType === 'all') || (item.ledger === ledgerType);
-                const matchCountry = (filterCountry === 'all') || 
-                                   (normalizeCountryName(item.country) === normalizeCountryName(filterCountry)) ||
-                                   (item.country && item.country.toLowerCase().includes(filterCountry.toLowerCase()));
-                
-                let matchDateRange = true;
-                if (item.date) {
-                    // 標準化日期格式進行精準比對 (支援 YYYY-MM-DD, YYYY/MM/DD 等)
-                    let itemDateStr = item.date.replace(/\//g, '-');
-                    if (startDate && itemDateStr < startDate) matchDateRange = false;
-                    if (endDate && itemDateStr > endDate) matchDateRange = false;
-                }
-
-                const matchQuery = (item.title.toLowerCase().includes(query)) ||
-                                   (item.category.toLowerCase().includes(query)) ||
-                                   ((item.city && item.city.toLowerCase().includes(query))) ||
-                                   ((item.country && item.country.toLowerCase().includes(query)));
-                
-                return matchLedger && matchCountry && matchDateRange && matchQuery;
-            });
-
-            renderTable(filtered);
-            updateSummaryCards(filtered);
-            updateCharts(filtered);
-            updateTravelSummary(filtered);
-            document.getElementById('recordCount').innerText = expenses.length;
-        }
-
-        function renderTable(items) {
-            const tbody = document.getElementById('expenseTableBody');
-            const emptyState = document.getElementById('emptyState');
-            tbody.innerHTML = '';
-
-            if (items.length === 0) {
-                emptyState.classList.remove('hidden');
-                document.getElementById('tableSumDisplay').innerText = '€ 0.00';
-                return;
-            }
-            emptyState.classList.add('hidden');
-
-            let runningSum = 0;
-            items.forEach(item => {
-                runningSum += item.amount;
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-purple-50/30 transition';
-
-                const isTravel = item.ledger === 'travel';
-                
-                const normCountry = normalizeCountryName(item.country);
-                const countryObj = countries[normCountry] || countries[item.country] || { flag: '🇩🇪', name: item.country || '德國' };
-
-                const ledgerBadge = isTravel
-                    ? '<span class="px-2 py-0.5 text-xs font-medium bg-pink-100 text-pink-700 rounded-full">旅遊</span>'
-                    : '<span class="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">日常</span>';
-
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-xs text-slate-600 whitespace-nowrap">${item.date}</td>
-                    <td class="py-3 px-4 whitespace-nowrap">${ledgerBadge}</td>
-                    <td class="py-3 px-4 whitespace-nowrap font-medium text-slate-800">${countryObj.flag} ${countryObj.name}</td>
-                    <td class="py-3 px-4 whitespace-nowrap text-slate-600">📍 ${normalizeCityName(normCountry, item.city || '') || item.city || '-'}</td>
-                    <td class="py-3 px-4 font-medium text-slate-800">${item.title}</td>
-                    <td class="py-3 px-4 text-xs"><span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg">${item.category}</span></td>
-                    <td class="py-3 px-4 text-right font-bold text-slate-900 whitespace-nowrap">€ ${item.amount.toFixed(2)}</td>
-                    <td class="py-3 px-4 text-center whitespace-nowrap space-x-2">
-                        <button onclick="editExpense('${item.id}')" class="text-purple-600 hover:text-purple-800 text-xs px-2 py-1 bg-purple-50 hover:bg-purple-100 rounded-lg transition"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteExpense('${item.id}')" class="text-red-500 hover:text-red-700 text-xs px-2 py-1 bg-red-50 hover:bg-red-100 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('tableSumDisplay').innerText = `€ ${runningSum.toFixed(2)}`;
-        }
-
-        function updateSummaryCards(items) {
-            let totalEUR = 0;
-            items.forEach(item => { totalEUR += item.amount; });
-            document.getElementById('totalExpenseDisplay').innerText = `€ ${totalEUR.toFixed(2)}`;
-        }
-
-        function updateTravelSummary(items) {
-            const tree = {};
-            items.forEach(item => {
-                const cKey = item.country || '德國';
-                const cName = item.city || '德勒斯登';
-                if (!tree[cKey]) tree[cKey] = { total: 0, cities: {} };
-                tree[cKey].total += item.amount;
-                if (!tree[cKey].cities[cName]) tree[cKey].cities[cName] = 0;
-                tree[cKey].cities[cName] += item.amount;
-            });
-
-            const listEl = document.getElementById('travelSummaryList');
-            listEl.innerHTML = '';
-
-            for (const [cKey, data] of Object.entries(tree)) {
-                const info = countries[cKey] || { flag: '🇩🇪', name: cKey };
-                const div = document.createElement('div');
-                div.className = 'text-xs bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5';
-                
-                let citiesHtml = '';
-                for (const [cityName, amt] of Object.entries(data.cities)) {
-                    citiesHtml += `
-                        <div class="flex items-center justify-between pl-3 text-slate-600 py-0.5 border-l-2 border-purple-200">
-                            <span>📍 ${normalizeCityName(cKey, cityName)}</span>
-                            <span class="font-semibold text-slate-800">€ ${amt.toFixed(2)}</span>
-                        </div>
-                    `;
-                }
-
-                div.innerHTML = `
-                    <div class="flex items-center justify-between font-bold text-slate-800">
-                        <span>${info.flag} ${info.name}</span>
-                        <span class="text-purple-700">€ ${data.total.toFixed(2)}</span>
-                    </div>
-                    <div class="space-y-1 pt-1">${citiesHtml}</div>
-                `;
-                listEl.appendChild(div);
-            }
-
-            if (Object.keys(tree).length === 0) {
-                listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">尚無國家與城市足跡資料</p>';
-            }
-        }
-
-        function updateCharts(items) {
-            const catTotals = {};
-            items.forEach(item => {
-                catTotals[item.category] = (catTotals[item.category] || 0) + item.amount;
-            });
-
-            const labels = Object.keys(catTotals);
-            const data = Object.values(catTotals);
-
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            if (categoryChartInstance) categoryChartInstance.destroy();
-
-            categoryChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels.length > 0 ? labels : ['無資料'],
-                    datasets: [{
-                        label: '支出金額 (EUR)',
-                        data: data.length > 0 ? data : [0],
-                        backgroundColor: labels.map(label => {
-                            // 檢查該分類在 items 中是否有旅遊帳本的支出
-                            const hasTravel = items.some(i => i.category === label && i.ledger === 'travel');
-                            return hasTravel ? 'rgba(236, 72, 153, 0.8)' : 'rgba(147, 51, 234, 0.8)'; // 粉紅代表旅遊，紫紅代表日常
-                        }),
-                        borderColor: labels.map(label => {
-                            const hasTravel = items.some(i => i.category === label && i.ledger === 'travel');
-                            return hasTravel ? 'rgb(219, 39, 119)' : 'rgb(126, 34, 206)';
-                        }),
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(241, 245, 249, 1)' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        function exportJSON() {
-            const backup = { expenses, categories, countries };
-            const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
-            const a = document.createElement('a');
-            a.href = str;
-            a.download = `exchange_tracker_v14_${new Date().toISOString().slice(0,10)}.json`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            closeModal('exportModal');
-        }
-
-        function exportCSV() {
-            let csvContent = "\uFEFFDate,Ledger,Item,category,Amount,country,city\n";
-            expenses.forEach(item => {
-                let row = [
-                    item.date,
-                    item.ledger || 'daily',
-                    `\"${(item.title || '').replace(/"/g, '""')}\"`,
-                    `\"${(item.category || '').replace(/"/g, '""')}\"`,
-                    item.amount,
-                    `\"${(item.country || '').replace(/"/g, '""')}\"`,
-                    `\"${(item.city || '').replace(/"/g, '""')}\"`
-                ];
-                csvContent += row.join(",") + "\n";
-            });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `exchange_expenses_v14_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            closeModal('exportModal');
-        }
-
-        function processImportFile() {
-            const fileInput = document.getElementById('importFile');
-            if (fileInput.files.length === 0) { alert('請選擇檔案'); return; }
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const content = e.target.result;
-                if (file.name.endsWith('.json')) {
-                    try {
-                        const parsed = JSON.parse(content);
-                        if (Array.isArray(parsed)) {
-                            expenses = parsed; saveToLocalStorage();
-                        } else if (parsed && typeof parsed === 'object') {
-                            if (parsed.expenses) { expenses = parsed.expenses; saveToLocalStorage(); }
-                            if (parsed.categories) { categories = parsed.categories; saveCategories(); }
-                            if (parsed.countries) { countries = parsed.countries; saveCountries(); }
-                        }
-                        loadSettings(); renderAll(); closeModal('importModal');
-                        alert('成功智慧匯入 JSON 資料與後臺設定！');
-                    } catch(err) { alert('解析 JSON 失敗'); }
-                } else if (file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
-                    try {
-                        const lines = content.split(/\r?\n/);
-                        if (lines.length < 2) { alert('CSV 內容過少'); return; }
-                        
-                        const headerLine = lines[0].replace(/\uFEFF/g, '');
-                        const headers = headerLine.split(',').map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
-                        
-                        let idxDate = headers.findIndex(h => h.includes('date') || h.includes('日期'));
-                        let idxLedger = headers.findIndex(h => h.includes('ledger') || h.includes('帳本'));
-                        let idxTitle = headers.findIndex(h => h.includes('title') || h.includes('item') || h.includes('品項') || h.includes('說明'));
-                        let idxCat = headers.findIndex(h => h.includes('category') || h.includes('分類'));
-                        let idxAmt = headers.findIndex(h => h.includes('amount') || h.includes('金額'));
-                        let idxCountry = headers.findIndex(h => h.includes('country') || h.includes('國家'));
-                        let idxCity = headers.findIndex(h => h.includes('city') || h.includes('城市'));
-
-                        let importedCount = 0;
-                        for (let i = 1; i < lines.length; i++) {
-                            const line = lines[i].trim();
-                            if (!line) continue;
-                            const parts = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
-                            const clean = parts.map(p => p.replace(/^"|"$/g, '').trim());
-
-                            const date = (idxDate !== -1 && clean[idxDate]) ? clean[idxDate] : new Date().toISOString().slice(0,10);
-                            const ledger = (idxLedger !== -1 && clean[idxLedger] === 'travel') ? 'travel' : 'daily';
-                            const title = (idxTitle !== -1 && clean[idxTitle]) ? clean[idxTitle] : '匯入品項';
-                            const category = (idxCat !== -1 && clean[idxCat]) ? clean[idxCat] : (categories[0] || '生活雜費');
-                            const amount = (idxAmt !== -1 && !isNaN(parseFloat(clean[idxAmt]))) ? parseFloat(clean[idxAmt]) : 0;
-                            const country = (idxCountry !== -1 && clean[idxCountry]) ? clean[idxCountry] : '德國';
-                            const city = (idxCity !== -1 && clean[idxCity]) ? clean[idxCity] : '德勒斯登 (Dresden)';
-
-                            if (!categories.includes(category)) { categories.push(category); saveCategories(); }
-
-                            expenses.push({ id: Date.now().toString() + Math.random(), date, ledger, title, category, amount, country, city });
-                            importedCount++;
-                        }
-
-                        saveToLocalStorage(); loadSettings(); renderAll(); closeModal('importModal');
-                        alert(`成功智慧匯入 ${importedCount} 筆支出紀錄！`);
-                    } catch(err) { alert('解析 CSV 失敗'); }
-                }
-            };
-            reader.readAsText(file);
-        }
-    </script>
+      } catch (err) {
+        console.warn('單筆同步失敗，將於下次連線重試', err);
+      }
+    }
+
+    async function uploadAllToCloud() {
+      if (!apiUrl) {
+        alert('尚未設定 Google Apps Script Web App URL！');
+        return;
+      }
+      if (!confirm(`確定要將目前本地的 ${records.length} 筆資料全量推送到雲端試算表嗎？`)) return;
+      
+      updateSyncStatusUI('syncing');
+      try {
+        await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'bulkUpload', records: records })
+        });
+        updateSyncStatusUI('success');
+        alert('全量資料上傳指令已送出！');
+      } catch (err) {
+        console.error('全量上傳失敗：', err);
+        updateSyncStatusUI('error');
+        alert('上傳失敗，請檢查網路或 API 網址設定。');
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+  </script>
 </body>
 </html>
